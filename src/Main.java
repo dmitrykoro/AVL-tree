@@ -1,9 +1,8 @@
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 public class Main<T extends Comparable<T>> implements Set<T> {
+
+    static Main tree = new Main();
 
     private Node<T> root;
 
@@ -26,18 +25,13 @@ public class Main<T extends Comparable<T>> implements Set<T> {
 
     @Override
     public int size() {
-        return size(root);
-    }
-
-    private int size(Node current) {
-        if (current == null)
-            return 0;
-        else {
-            int size = 1;
-            size += size(current.leftChild);
-            size += size(current.rightChild);
-            return size;
+        Iterator itr = tree.iterator();
+        int size = 0;
+        while (itr.hasNext()) {
+            size++;
+            itr.next();
         }
+        return size;
     }
 
     @Override
@@ -47,31 +41,19 @@ public class Main<T extends Comparable<T>> implements Set<T> {
 
     @Override
     public boolean contains(Object key) {
-        return contains(root, (T) key);
-    }
-
-    private boolean contains(Node<T> current, T key) {
-        boolean found = false;
-        while (!found && current != null) {
-            T currKey = current.key;
-            if (key.compareTo(currKey) < 0)
-                current = current.leftChild;
-            else if (key.compareTo(currKey) > 0)
-                current = current.rightChild;
-            else {
+        for (Object aTree : tree) {
+            if (aTree.equals(key))
                 return true;
-            }
-            found = contains(current, key);
         }
-        return found;
+        return false;
     }
 
     @Override
     public Iterator<T> iterator() {
-        return new SubIterator<T>();
+        return new SubIterator();
     }
 
-    private class SubIterator<T> implements Iterator<T> {
+    private class SubIterator implements Iterator<T> {
 
         Node current = root;
         Stack<Node> stack;
@@ -106,9 +88,15 @@ public class Main<T extends Comparable<T>> implements Set<T> {
     }
 
     @Override
-    public Object[] toArray() {  //возврат массива с элементами (проход по всему дереву с добавлением эл-тов в массив)
-        //TODO
-        return new Object[0];
+    public Object[] toArray() {
+        Object[] result = new Object[tree.size()];
+        Iterator itr = tree.iterator();
+        int i = 0;
+        while (itr.hasNext()) {
+            result[i] = itr.next();
+            i++;
+        }
+        return result;
     }
 
     @Override
@@ -150,7 +138,7 @@ public class Main<T extends Comparable<T>> implements Set<T> {
     }
 
     private Node smallLeftRotate(Node current) {
-        Node currLeftChild = current.leftChild;
+        Node currLeftChild = current.leftChild;  //
         current.leftChild = currLeftChild.rightChild;
         currLeftChild.rightChild = current;
         current.height = Math.max(height(current.leftChild), height(current.rightChild)) + 1;
@@ -215,7 +203,7 @@ public class Main<T extends Comparable<T>> implements Set<T> {
 
         current.height = Math.max(height(current.leftChild), height(current.rightChild)) + 1;
 
-        balance(current, (T) current.key);
+        current = balance(current, (T) current.key);
 
         return current;
     }
@@ -227,8 +215,10 @@ public class Main<T extends Comparable<T>> implements Set<T> {
     }
 
     @Override
-    public boolean addAll(Collection c) { //добавление всех элементов коллекции в дерево
-        //TODO
+    public boolean addAll(Collection c) {
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            tree.add((Comparable) i.next());
+        }
         return false;
     }
 
@@ -239,13 +229,23 @@ public class Main<T extends Comparable<T>> implements Set<T> {
 
     @Override
     public boolean removeAll(Collection c) { //удаление всех коллекционных элементов из дерева
-        //TODO
+        Iterator i = c.iterator();
+        while (i.hasNext()) {
+            Object tmp = i.next();
+            if (tree.contains(tmp))
+                tree.remove(tmp);
+        }
         return false;
     }
 
     @Override
     public boolean retainAll(Collection c) { //удаление всех, кроме тех что в коллекции
-        //TODO
+        Iterator i = tree.iterator();
+        while (i.hasNext()) {
+            Object tmp = i.next();
+            if (!c.contains(tmp))
+                tree.remove(tmp);
+        }
         return false;
     }
 
@@ -266,7 +266,7 @@ public class Main<T extends Comparable<T>> implements Set<T> {
     }
 
     public static void main(String[] args) {
-        Main tree = new Main();
+
 
         tree.add(15);
         tree.add(14);
@@ -276,15 +276,38 @@ public class Main<T extends Comparable<T>> implements Set<T> {
         tree.add(5);
         tree.add(20);
 
+        Object arr = tree.toArray();
         int sz = tree.size();
 
         tree.remove(0);
         tree.remove(15);
+        tree.remove(14);
 
         sz = tree.size();
 
+        tree.addAll(Arrays.asList(14, 45, 12, 17, 18, 19, 21, 39, 140));
+
+        sz = tree.size();
+
+        //tree.addAll()
+
         boolean check = tree.contains(0);
-        check = tree.contains(15);
+        check = tree.contains(14);
+        check = tree.contains(45);
+        check = tree.contains(12);
+
+       tree.removeAll(Arrays.asList(14, 45, 12, 17, 18, 19, 21, 39, 140));
+
+        sz = tree.size();
+
+
+        check = tree.contains(14);
+        check = tree.contains(45);
+        check = tree.contains(12);
+
+        tree.retainAll(Arrays.asList(5));
+
+        arr = tree.toArray();
 
 
     }
