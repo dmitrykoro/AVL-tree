@@ -3,20 +3,20 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Stack;
 
-public class Main implements Set {
+public class Main<T extends Comparable<T>> implements Set<T> {
 
-    private Node root;
+    private Node<T> root;
 
-    private static class Node<T extends Comparable> {
+    private static class Node<T extends Comparable<T>> {
 
         T key;
 
         int height;
 
-        private Node leftChild;
-        private Node rightChild;
+        private Node<T> leftChild;
+        private Node<T> rightChild;
 
-        Node(T key, Node leftChild, Node rightChild) {
+        Node(T key, Node<T> leftChild, Node<T> rightChild) {
             this.key = key;
             this.rightChild = rightChild;
             this.leftChild = leftChild;
@@ -47,16 +47,16 @@ public class Main implements Set {
 
     @Override
     public boolean contains(Object key) {
-        return contains(root, key);
+        return contains(root, (T) key);
     }
 
-    private boolean contains(Node current, Object key) {
+    private boolean contains(Node<T> current, T key) {
         boolean found = false;
         while (!found && current != null) {
-            Object currKey = current.key;
-            if (((Comparable) key).compareTo(currKey) < 0)
+            T currKey = current.key;
+            if (key.compareTo(currKey) < 0)
                 current = current.leftChild;
-            else if (((Comparable) key).compareTo(currKey) > 0)
+            else if (key.compareTo(currKey) > 0)
                 current = current.rightChild;
             else {
                 return true;
@@ -67,16 +67,16 @@ public class Main implements Set {
     }
 
     @Override
-    public Iterator iterator() {
-        return new subIterator();
+    public Iterator<T> iterator() {
+        return new SubIterator<T>();
     }
 
-    private class subIterator implements Iterator {
+    private class SubIterator<T> implements Iterator<T> {
 
         Node current = root;
         Stack<Node> stack;
 
-        public subIterator() {
+        public SubIterator() {
             stack = new Stack<>();
 
             while (current != null) {
@@ -91,7 +91,7 @@ public class Main implements Set {
         }
 
         @Override
-        public Object next() {
+        public T next() {
             Node curr = stack.pop();
             Object key = curr.key;
             if (curr.rightChild != null) {
@@ -101,29 +101,29 @@ public class Main implements Set {
                     curr = curr.leftChild;
                 }
             }
-            return key;
+            return (T) key;
         }
     }
 
     @Override
-    public Object[] toArray() {
+    public Object[] toArray() {  //возврат массива с элементами (проход по всему дереву с добавлением эл-тов в массив)
         //TODO
         return new Object[0];
     }
 
     @Override
-    public boolean add(Object key) {
+    public boolean add(T key) {
         root = insert(key, root);
         return false;
     }
 
-    private Node insert(Object key, Node current) {
+    private Node insert(T key, Node current) {
         if (current == null)
-            current = new Node((Comparable) key, null, null);
-         else if (((Comparable) key).compareTo(current.key) < 0) {
+            current = new Node(key, null, null);
+         else if (key.compareTo((T) current.key) < 0) {
             current.leftChild = insert(key, current.leftChild);
             current = balance(current, key);
-        } else if (((Comparable) key).compareTo(current.key) > 0) {
+        } else if (key.compareTo((T) current.key) > 0) {
             current.rightChild = insert(key, current.rightChild);
             current = balance(current, key);
         }
@@ -131,15 +131,15 @@ public class Main implements Set {
         return current;
     }
 
-    private Node balance(Node current, Object key) {
+    private Node balance(Node current, T key) {
         if (height(current.leftChild) - height(current.rightChild) == 2) {
-            if (((Comparable) key).compareTo(current.leftChild.key) < 0) {
+            if (key.compareTo((T) current.leftChild.key) < 0) {
                 current = smallLeftRotate(current);
             } else {
                 current = bigLeftRotate(current);
             }
         } else if (height(current.rightChild) - height(current.leftChild) == 2) {
-            if (((Comparable) key).compareTo(current.rightChild.key) > 0) {
+            if (key.compareTo((T) current.rightChild.key) > 0) {
                 current = smallRightRotate(current);
             } else {
                 current = bigRightRotate(current);
@@ -179,17 +179,17 @@ public class Main implements Set {
 
     @Override
     public boolean remove(Object key) {
-        root = remove(root, key);
+        root = remove(root, (T) key);
         return false;
     }
 
-    private Node remove(Node current, Object key) {
+    private Node remove(Node current, T key) {
 
         if (current == null)
             return current;
-        if (((Comparable) key).compareTo(current.key) < 0)
+        if (key.compareTo((T) current.key) < 0)
             current.leftChild = remove(current.leftChild, key);
-        else if (((Comparable) key).compareTo(current.key) > 0)
+        else if (key.compareTo((T) current.key) > 0)
             current.rightChild = remove(current.rightChild, key);
         else {
             if (current.leftChild == null || current.rightChild == null) {
@@ -206,7 +206,7 @@ public class Main implements Set {
             } else {
                 Node temp = minimumNode(current.rightChild);
                 current.key = temp.key;
-                current.rightChild = remove(current.rightChild, temp.key);
+                current.rightChild = remove(current.rightChild, (T) temp.key);
             }
         }
 
@@ -215,7 +215,7 @@ public class Main implements Set {
 
         current.height = Math.max(height(current.leftChild), height(current.rightChild)) + 1;
 
-        balance(current, current.key);
+        balance(current, (T) current.key);
 
         return current;
     }
@@ -227,36 +227,36 @@ public class Main implements Set {
     }
 
     @Override
-    public boolean addAll(Collection c) {
+    public boolean addAll(Collection c) { //добавление всех элементов коллекции в дерево
         //TODO
         return false;
     }
 
     @Override
     public void clear() {
-        //TODO
+        root = null;
     }
 
     @Override
-    public boolean removeAll(Collection c) {
-        //TODO
-        return false;
-    }
-
-    @Override
-    public boolean retainAll(Collection c) {
+    public boolean removeAll(Collection c) { //удаление всех коллекционных элементов из дерева
         //TODO
         return false;
     }
 
     @Override
-    public boolean containsAll(Collection c) {
+    public boolean retainAll(Collection c) { //удаление всех, кроме тех что в коллекции
         //TODO
         return false;
     }
 
     @Override
-    public Object[] toArray(Object[] a) {
+    public boolean containsAll(Collection c) { //есть ли в дереве все, которые есть в коллекции
+        //TODO
+        return false;
+    }
+
+    @Override
+    public Object[] toArray(Object[] a) {  //один элемент в массив
         //TODO
         return new Object[0];
     }
@@ -278,14 +278,12 @@ public class Main implements Set {
 
         int sz = tree.size();
 
-        tree.remove(5);
         tree.remove(0);
         tree.remove(15);
 
         sz = tree.size();
 
-        boolean check = tree.contains(5);
-        check = tree.contains(0);
+        boolean check = tree.contains(0);
         check = tree.contains(15);
 
 
