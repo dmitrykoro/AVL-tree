@@ -13,16 +13,10 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         this.root = null;
     }
 
-    AVL(Node root) {
-        this.root = root;
-    }
-
     private static class Node<T extends Comparable<T>> {
 
         T key;
-
         int height;
-
         private Node<T> leftChild;
         private Node<T> rightChild;
 
@@ -116,7 +110,6 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         return false;
     }
 
-
     Node insert(T key, Node current) {
         if (current == null)
             return new Node(key, null, null);
@@ -181,12 +174,10 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
 
             }
         }
-
         if (root == null)
             return root;
 
         root.height = max(height(root.leftChild), height(root.rightChild)) + 1;
-
         int balance = getBalance(root);
 
         if (balance > 1 && getBalance(root.leftChild) >= 0)
