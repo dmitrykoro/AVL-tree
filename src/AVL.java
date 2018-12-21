@@ -15,8 +15,8 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
 
     private static class Node<T extends Comparable<T>> {
 
-        T key;
-        int height;
+        private T key;
+        private int height;
         private Node<T> leftChild;
         private Node<T> rightChild;
 
@@ -24,6 +24,35 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
             this.key = key;
             this.rightChild = rightChild;
             this.leftChild = leftChild;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 0;
+        Iterator<T> i = iterator();
+        while (i.hasNext()) {
+            T obj = i.next();
+            if (obj != null)
+                h += obj.hashCode();
+        }
+        return h;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+
+        if (!(o instanceof Set))
+            return false;
+        Collection<?> c = (Collection<?>) o;
+        if (c.size() != size())
+            return false;
+        try {
+            return containsAll(c);
+        } catch (ClassCastException | NullPointerException unused) {
+            return false;
         }
     }
 
@@ -57,13 +86,13 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         return new SubIterator();
     }
 
-    private class SubIterator<T> implements Iterator<T> {
+    private class SubIterator implements Iterator<T> {
 
-        Node current = root;
-        Stack<Node> stack;
+        private Node<T> current = root;
+        private Stack<Node<T>> stack;
 
         public SubIterator() {
-            stack = new Stack<Node>();
+            stack = new Stack<>();
 
             while (current != null) {
                 stack.push(current);
@@ -78,8 +107,8 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
 
         @Override
         public T next() {
-            Node curr = stack.pop();
-            Object key = curr.key;
+            Node<T> curr = stack.pop();
+            T key = curr.key;
             if (curr.rightChild != null) {
                 curr = curr.rightChild;
                 while (curr != null) {
@@ -87,7 +116,7 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
                     curr = curr.leftChild;
                 }
             }
-            return (T) key;
+            return key;
         }
     }
 
@@ -105,14 +134,13 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
 
     @Override
     public boolean add(T key) {
-
         root = insert(key, root);
         return false;
     }
 
-    Node insert(T key, Node current) {
+    private Node<T> insert(T key, Node<T> current) {
         if (current == null)
-            return new Node(key, null, null);
+            return new Node<>(key, null, null);
 
         if (key.compareTo((T) current.key) < 0)
             current.leftChild = insert(key, current.leftChild);
@@ -147,7 +175,7 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         return false;
     }
 
-    Node remove(Node root, T key) {
+    private Node<T> remove(Node<T> root, T key) {
         if (root == null)
             return root;
         if (key.compareTo((T) root.key) < 0)
@@ -157,7 +185,7 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         else {
 
             if ((root.leftChild == null) || (root.rightChild == null)) {
-                Node tmp = null;
+                Node<T> tmp = null;
                 if (tmp == root.leftChild)
                     tmp = root.rightChild;
                 else
@@ -168,7 +196,7 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
                     root = tmp;
             } else {
 
-                Node tmp = minimumNode(root.rightChild);
+                Node<T> tmp = minimumNode(root.rightChild);
                 root.key = tmp.key;
                 root.rightChild = remove(root.rightChild, (T) tmp.key);
 
@@ -195,9 +223,9 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         return root;
     }
 
-    private Node smallRightRotate(Node current) {
-        Node currLeft = current.leftChild;
-        Node currRight = currLeft.rightChild;
+    private Node<T> smallRightRotate(Node<T> current) {
+        Node<T> currLeft = current.leftChild;
+        Node<T> currRight = currLeft.rightChild;
         currLeft.rightChild = current;
         current.leftChild = currRight;
         current.height = max(height(current.leftChild), height(current.rightChild)) + 1;
@@ -205,9 +233,9 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         return currLeft;
     }
 
-    private Node smallLeftRotate(Node current) {
-        Node currRight = current.rightChild;
-        Node currLeft = currRight.leftChild;
+    private Node<T> smallLeftRotate(Node<T> current) {
+        Node<T> currRight = current.rightChild;
+        Node<T> currLeft = currRight.leftChild;
         currRight.leftChild = current;
         current.rightChild = currLeft;
         current.height = max(height(current.leftChild), height(current.rightChild)) + 1;
@@ -215,22 +243,21 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         return currRight;
     }
 
-    private int getBalance(Node current) {
+    private int getBalance(Node<T> current) {
         if (current == null)
             return 0;
         return height(current.leftChild) - height(current.rightChild);
     }
 
-    private Node minimumNode(Node current) {
+    private Node<T> minimumNode(Node<T> current) {
         while (current.leftChild != null)
             current = current.leftChild;
         return current;
     }
 
     @Override
-    public boolean addAll(Collection c) {
-        for (Iterator i = c.iterator(); i.hasNext(); )
-            this.add((T) i.next());
+    public boolean addAll(Collection<? extends T> c) {
+        for (T aC : c) this.add(aC);
         return false;
     }
 
@@ -240,21 +267,16 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
     }
 
     @Override
-    public boolean removeAll(Collection c) { //удаление всех коллекционных элементов из дерева
-        Iterator i = c.iterator();
-        while (i.hasNext()) {
-            Object tmp = i.next();
-            if (this.contains(tmp))
-                this.remove(tmp);
+    public boolean removeAll(Collection<?> c) {
+        for (Object tmp : c) {
+            this.remove(tmp);
         }
         return false;
     }
 
     @Override
-    public boolean retainAll(Collection c) { //удаление всех, кроме тех что в коллекции
-        Iterator i = this.iterator();
-        while (i.hasNext()) {
-            Object tmp = i.next();
+    public boolean retainAll(Collection<?> c) {
+        for (Object tmp : this) {
             if (!c.contains(tmp))
                 this.remove(tmp);
         }
@@ -262,10 +284,8 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
     }
 
     @Override
-    public boolean containsAll(Collection c) { //есть ли в дереве все, которые есть в коллекции
-        Iterator i = c.iterator();
-        while (i.hasNext()) {
-            Object tmp = i.next();
+    public boolean containsAll(Collection<?> c) {
+        for (Object tmp : c) {
             if (!this.contains(tmp))
                 return false;
         }
@@ -277,7 +297,7 @@ public class AVL<T extends Comparable<T>> implements Set<T> {
         return a;
     }
 
-    int height(Node current) {
+    private int height(Node<T> current) {
         if (current == null)
             return 0;
         return current.height;
